@@ -31,7 +31,7 @@ router.delete('/deleteCollection', (req,res)=>{
     })
 }) 
 
-router.post('/entryFace', uploading.single('img'), async (req, res) => {
+router.post('/entryFace', [authMiddleware, uploading.single('img')], async (req, res) => {
 
     var tmp_path = req.file.path;
     var tmpPic = fs.readFileSync(tmp_path)
@@ -45,7 +45,7 @@ router.post('/entryFace', uploading.single('img'), async (req, res) => {
         },
         MaxFaces: 5
     }
-    var result = await searchByImage(searchParams, "45583265")  
+    var result = await searchByImage(searchParams, req.userData.uid)  
     return res.json(result)
 })
 //
