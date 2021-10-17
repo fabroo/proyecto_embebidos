@@ -1,10 +1,20 @@
 import cv2
 import sys
+import pusher
+from time import sleep
 
-cascPath = "haarcascade_frontalface_default.xml"
+cascPath = "assets/python/haarcascade_frontalface_default.xml"
 faceCascade = cv2.CascadeClassifier(cascPath)
 
 video_capture = cv2.VideoCapture(2)
+
+pusher_client = pusher.Pusher(
+    app_id = "1082208",
+    key = "b103ad2b1e20a1198455",
+    secret = "5ddd5781b85de3eed2d7",
+    cluster = "us2",
+    ssl=True
+)
 
 while True:
     # Capture frame-by-frame
@@ -19,9 +29,10 @@ while True:
         minSize=(30, 30),
         flags=cv2.CASCADE_SCALE_IMAGE
     )
-
+    
     if(len(faces) > 0) :
-        cv2.imwrite("sendImage.png", frame)
+        cv2.imwrite("assets/sendImage.png", frame)
+        pusher_client.trigger('monomon', 'faceDetectedPython',{})
         break
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
