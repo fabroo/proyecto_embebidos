@@ -7,7 +7,7 @@ const { authMiddleware } = require('../utils');
 
 var router = express.Router();
 
-//router.use(authMiddleware)
+router.use(authMiddleware)
 
 require("dotenv").config()
 const {
@@ -31,7 +31,7 @@ router.delete('/deleteCollection', (req,res)=>{
     })
 }) 
 
-router.post('/entryFace', [authMiddleware, uploading.single('img')], async (req, res) => {
+router.post('/entryFace', uploading.single('img'), async (req, res) => {
 
     var tmp_path = req.file.path;
     var tmpPic = fs.readFileSync(tmp_path)
@@ -49,7 +49,7 @@ router.post('/entryFace', [authMiddleware, uploading.single('img')], async (req,
     return res.json(result)
 })
 //
-router.post('/addFaces', [authMiddleware, uploading.array('files[]', 3)], (req,res)=>{
+router.post('/addFaces', uploading.array('files[]', 3), (req,res)=>{
     var files = req.files
     console.log("QUE", JSON.stringify(req.userData, null, 4))
     files.forEach((v,i,a)=>{
