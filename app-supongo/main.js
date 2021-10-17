@@ -45,16 +45,20 @@ ipcMain.on('stopPython', async (e, req)=>{
     py.kill()
 })
 
-channel.bind('faceDetectedPython', async function (data) {
+ipcMain.on('faceDetected', async function (e, req) {
     var data = fs.readFileSync('assets/sendImage.png')
     console.log("holiwi")
     const {valid, uid} = await searchByImage(data)
     if(valid) {
         console.log(uid)
-        ipcMain.emit('faceFound')
+        channel.trigger
+        e.reply('faceFound', {uid})
+        
         //request al nodeMCU para empezar el rfid
     }
 });
+
+
 
 
 
