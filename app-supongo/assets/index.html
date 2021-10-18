@@ -20,43 +20,14 @@
     <input type="password" name="password" id="password" placeholder="password">
     <button id="submit">Login</button>
     <button onclick="startProcess();">paton</button>
+    <a href="html/register.html">anashe!</a>
     <h1 id="cara">no cara</h1>
     <div>
         <h1 id="logged">No loggeado</h1>
     </div>
     
     <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js";
-        import { signInWithEmailAndPassword, getAuth } from "https://www.gstatic.com/firebasejs/9.1.3/firebase-auth.js";
-        // TODO: Add SDKs for Firebase products that you want to use
-        // https://firebase.google.com/docs/web/setup#available-libraries
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCbXifIKRwcow_QWtlxyjIti4f7IAMU9mE",
-            authDomain: "monomon.firebaseapp.com",
-            projectId: "monomon",
-            storageBucket: "monomon.appspot.com",
-            messagingSenderId: "936666137062",
-            appId: "1:936666137062:web:d803283b04fbb131a59627"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth()
-        var loginForm = document.getElementById("submit")
-        loginForm.addEventListener("click", () => {
-            var email = document.getElementById("email").value
-            var password = document.getElementById("password").value
-
-            signInWithEmailAndPassword(auth, email, password)
-                .then(v => {
-                    var logged = document.getElementById("logged")
-                    logged.innerHTML = `Loggeado, access-Token: ${v.user.accessToken}`
-                })
-                .catch(err => alert(err))
-        })
+        
     </script>
 </body>
 

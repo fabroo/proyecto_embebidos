@@ -6,6 +6,7 @@
   "dependencies": {
     "aws-sdk": "^2.1009.0",
     "dotenv": "^10.0.0",
+    "firebase": "^9.1.3",
     "pusher-js": "^7.0.3"
   },
   "devDependencies": {
