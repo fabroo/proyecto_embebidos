@@ -5,8 +5,7 @@
 ## 1. instalar el esp32 para Arduino 🚧
 
 File > Preferences > Gestor de URLs adicionales de tarjetas:
-Agregar ```https://dl.espressif.com/dl/package_esp32_index.json, http://arduino.esp8266.com/stable/package_esp8266com_index.json
-```
+Agregar ```https://dl.espressif.com/dl/package_esp32_index.json, http://arduino.esp8266.com/stable/package_esp8266com_index.json```
 
 ## 2. instalar las librerias del proyecto ➕
 
