@@ -2,7 +2,6 @@ import time
 from typing import Collection
 import cv2
 import sys
-import pusher
 import requests
 from time import sleep
 import boto3
@@ -26,15 +25,7 @@ print("Detectando caras.")
 while True:
     video_capture = cv2.VideoCapture(2, cv2.CAP_DSHOW)
 
-    pusher_client = pusher.Pusher(
-        app_id="1082208",
-        key="b103ad2b1e20a1198455",
-        secret="5ddd5781b85de3eed2d7",
-        cluster="us2",
-        ssl=True
-    )
-
-    while True:
+    while checking:
         # Capture frame-by-frame
         ret, frame = video_capture.read()
 
@@ -48,13 +39,14 @@ while True:
             flags=cv2.CASCADE_SCALE_IMAGE
         )
 
-        cv2.imshow('my webcam', frame)
-
         if(len(faces) > 0):
-            cv2.imwrite("../sendImage.png", frame)
-            #pusher_client.trigger('monomon', 'faceDetectedPython',{})
-            break
+            
+            for (x, y, w, h) in faces:
+                if w > 100 and h > 100:
+                    cv2.imwrite("../sendImage.png", frame)
+                    checking = False
 
+        cv2.imshow('my webcam', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
@@ -94,12 +86,11 @@ while True:
                 sn = db.collection(u'users').where(u'dni', u'==', dni).stream()
 
                 for doc in sn:
-                     name = doc.to_dict()['nombre']
-               
+                    name = doc.to_dict()['nombre']
 
                 print("Cara reconocida, " + name)
                 print("Use su llave rfid para ingresar.")
-                requests.post("http://" + url +"/openGate", json={
+                requests.post("http://" + url + "/openGate", json={
                     "rfidList": ["algunos valores", "que hardcodearemos"],
                     "name": name
                 })
