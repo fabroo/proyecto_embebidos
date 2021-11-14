@@ -20,6 +20,7 @@ cascPath = "haarcascade_frontalface_default.xml"
 faceCascade = cv2.CascadeClassifier(cascPath)
 checking = True
 client = boto3.client('rekognition')
+url = "192.168.0.117"
 print("Detectando caras.")
 
 while True:
@@ -98,7 +99,7 @@ while True:
 
                 print("Cara reconocida, " + name)
                 print("Use su llave rfid para ingresar.")
-                requests.post("http://192.168.0.117/openGate", json={
+                requests.post("http://" + url +"/openGate", json={
                     "rfidList": ["algunos valores", "que hardcodearemos"],
                     "name": name
                 })
