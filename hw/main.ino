@@ -187,7 +187,6 @@ void loop(void) {
 }
 
 void openGate() {
-
   Serial.println("abriendo puerta");
   delay(2000);
   Serial.println("se termino de abrir puerta");
@@ -195,7 +194,6 @@ void openGate() {
 }
 
 void closeGate() {
-
   Serial.println("cerrando puerta");
   delay(2000);
   Serial.println("se termino de cerrar puerta");
