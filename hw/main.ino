@@ -69,10 +69,7 @@ void IRAM_ATTR onTimer() {
 
 void IRAM_ATTR onTimer2() {
   portENTER_CRITICAL_ISR(&timerMux);
-  searching = false;
-  Serial.print("RFID encontrado. Bienvenido, ");
-  Serial.println(residentName);
-  ESTADO = OPEN;
+  
   portEXIT_CRITICAL_ISR(&timerMux);
 
 }
@@ -110,27 +107,31 @@ void setup(void) {
 
   server.on(UriBraces("/openGate"), HTTP_POST, []() {
 
-    StaticJsonDocument<300> doc;
-    DeserializationError error = deserializeJson(doc, server.arg("plain"));
-    if (error) {
-      Serial.println("error wacho qsy");
+    if(ESTADO == REST) {
+      StaticJsonDocument<300> doc;
+      DeserializationError error = deserializeJson(doc, server.arg("plain"));
+      if (error) {
+        Serial.println("error wacho qsy");
+      }
+      String rfid1 = doc["rfidList"][0];
+      String rfid2 = doc["rfidList"][1];
+      String namee = doc["name"];
+      residentName = namee;
+  
+      // si es la misma que la que esta definida arriba
+      Serial.println("Empezando el reconocimiento...");
+      searching = true;
+      timer = timerBegin(0, 80, true);
+      timerAttachInterrupt(timer, &onTimer, true);
+      timerAlarmWrite(timer, 1500000, false);
+      timerAlarmEnable(timer);
+      ESTADO = SEARCH;
+      isResident = true;
+  
+      server.send(200, "text/plain", "Arrancando a reconocer.");
+    } else {
+      server.send(400, "text/plain", "Ya se está reconociendo bro.");
     }
-    String rfid1 = doc["rfidList"][0];
-    String rfid2 = doc["rfidList"][1];
-    String namee = doc["name"];
-    residentName = namee;
-
-    // si es la misma que la que esta definida arriba
-    Serial.println("Empezando el reconocimiento...");
-    searching = true;
-    timer = timerBegin(0, 80, true);
-    timerAttachInterrupt(timer, &onTimer, true);
-    timerAlarmWrite(timer, 1500000, false);
-    timerAlarmEnable(timer);
-    ESTADO = SEARCH;
-    isResident = true;
-
-    server.send(200, "text/plain", "{err:false, msg:'opening gate...'}");
 
 
   });
@@ -159,10 +160,7 @@ void loop(void) {
       ESTADO = REST;
       break;
     case SEARCH:
-        if(rfid.PICC_IsNewCardPresent()){
-          ESTADO = OPEN;
-        }
-/*
+
       if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial())
         return;
 
@@ -174,19 +172,19 @@ void loop(void) {
 
       rfid.PICC_HaltA();
       rfid.PCD_StopCrypto1();
-
-      if (isResident) {
+      //cambiar el if a que busque un buffer concreto
+      if (isResident && buffer == buffer) {
+        searching = false;
+        Serial.print("RFID encontrado. Bienvenido, ");
+        Serial.println(residentName);
         ESTADO = OPEN;
       }
       else {
         // DO NOTHING
       }
-      break;*/
+      break;
 
-      timer = timerBegin(1, 80, true);
-      timerAttachInterrupt(timer, &onTimer, true);
-      timerAlarmWrite(timer, 20000000, false);
-      timerAlarmEnable(timer);
+
   }
 
   delay(2);
