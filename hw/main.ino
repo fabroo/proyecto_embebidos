@@ -15,8 +15,8 @@
 #define RST_PIN   22
 #define SIZE_BUFFER     18
 #define MAX_SIZE_BLOCK  16
-#define greenPin     12
-#define redPin       32
+#define VERDE     12
+#define ROJO       4
 
 byte nuidPICC[4] = {0, 0, 0, 0};
 
@@ -35,8 +35,8 @@ const int ipaddress[4] = {192, 168, 1, 138};
 
 //wifi
 #define port 80
-#define ssid "CASA11"
-#define psw "5432154321"
+#define ssid "Hogar"
+#define psw "casacorzini10"
 
 //hardware
 #define LED_VERDE 23
@@ -79,9 +79,8 @@ void IRAM_ATTR onTimer2() {
 
 void setup(void) {
   Serial.begin(115200);
-
-
-
+  pinMode(ROJO, OUTPUT);
+  pinMode(VERDE, OUTPUT);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, psw);
   Serial.println("");
@@ -125,8 +124,8 @@ void setup(void) {
     Serial.println("Empezando el reconocimiento...");
     searching = true;
     timer = timerBegin(0, 80, true);
-    timerAttachInterrupt(timer, &onTimer2, true);
-    timerAlarmWrite(timer, 3000000, false);
+    timerAttachInterrupt(timer, &onTimer, true);
+    timerAlarmWrite(timer, 1500000, false);
     timerAlarmEnable(timer);
     ESTADO = SEARCH;
     isResident = true;
@@ -147,17 +146,24 @@ void loop(void) {
 
   switch (ESTADO) {
     case OPEN:
+      digitalWrite(VERDE, HIGH);
+      digitalWrite(ROJO, LOW);
       openGate();
       isResident = false;
       ESTADO = CLOSE;
       break;
     case CLOSE:
+      digitalWrite(VERDE, LOW);
+      digitalWrite(ROJO, HIGH);
       closeGate();
       ESTADO = REST;
       break;
     case SEARCH:
-
-      /*if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial())
+        if(rfid.PICC_IsNewCardPresent()){
+          ESTADO = OPEN;
+        }
+/*
+      if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial())
         return;
 
       String buffer;
