@@ -7,6 +7,8 @@
 #include <ESPmDNS.h>
 #include <uri/UriBraces.h>
 #include <uri/UriRegex.h>
+#include <ESP32Servo.h>
+
 
 #include <SPI.h>//https://www.arduino.cc/en/reference/SPI
 #include <MFRC522.h>//https://github.com/miguelbalboa/rfid
@@ -15,10 +17,12 @@
 #define RST_PIN   22
 #define SIZE_BUFFER     18
 #define MAX_SIZE_BLOCK  16
-#define VERDE     12
-#define ROJO       4
+#define VERDE     15
+#define ROJO       5
+#define servoPin 4
 
 byte nuidPICC[4] = {0, 0, 0, 0};
+Servo puerta;
 
 volatile int interruptCounter;
 int totalInterruptCounter;
@@ -38,9 +42,6 @@ const int ipaddress[4] = {192, 168, 1, 138};
 #define ssid "Hogar"
 #define psw "casacorzini10"
 
-//hardware
-#define LED_VERDE 23
-#define LED_ROJO 24
 
 //states
 #define CLOSE 0
@@ -50,7 +51,7 @@ const int ipaddress[4] = {192, 168, 1, 138};
 
 //variables
 const String gate_id = "gate_id";
-int ESTADO = SEARCH;
+int ESTADO = REST;
 bool searching = false;
 bool isResident = false;
 String residentName = "alguien";
@@ -61,14 +62,8 @@ void IRAM_ATTR onTimer() {
   if(searching){
     Serial.println("Terminó el timer. No se encontró RFID.");
     searching = false;
+    ESTADO = REST;
   }
-  
-  portEXIT_CRITICAL_ISR(&timerMux);
-
-}
-
-void IRAM_ATTR onTimer2() {
-  portENTER_CRITICAL_ISR(&timerMux);
   
   portEXIT_CRITICAL_ISR(&timerMux);
 
@@ -76,13 +71,21 @@ void IRAM_ATTR onTimer2() {
 
 void setup(void) {
   Serial.begin(115200);
+  
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+  puerta.setPeriodHertz(50);
+  puerta.attach(servoPin, 500, 2400);
+
   pinMode(ROJO, OUTPUT);
   pinMode(VERDE, OUTPUT);
+  
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, psw);
   Serial.println("");
 
-  // Wait for connection
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -91,10 +94,8 @@ void setup(void) {
   Serial.print("Connected to ");
   Serial.println(WiFi.localIP());
 
-
   SPI.begin();
   rfid.PCD_Init();
-  delay(2000);
 
   Serial.print(F("Reader :"));
   rfid.PCD_DumpVersionToSerial();
@@ -111,7 +112,7 @@ void setup(void) {
       StaticJsonDocument<300> doc;
       DeserializationError error = deserializeJson(doc, server.arg("plain"));
       if (error) {
-        Serial.println("error wacho qsy");
+        Serial.println("[ERROR OPEN GATE]");
       }
       String rfid1 = doc["rfidList"][0];
       String rfid2 = doc["rfidList"][1];
@@ -119,11 +120,11 @@ void setup(void) {
       residentName = namee;
   
       // si es la misma que la que esta definida arriba
-      Serial.println("Empezando el reconocimiento...");
+      Serial.println("Empezando el reconocimiento de RFID...");
       searching = true;
       timer = timerBegin(0, 80, true);
       timerAttachInterrupt(timer, &onTimer, true);
-      timerAlarmWrite(timer, 1500000, false);
+      timerAlarmWrite(timer, 15000000, false);
       timerAlarmEnable(timer);
       ESTADO = SEARCH;
       isResident = true;
@@ -132,8 +133,6 @@ void setup(void) {
     } else {
       server.send(400, "text/plain", "Ya se está reconociendo bro.");
     }
-
-
   });
 
   server.begin();
@@ -143,32 +142,27 @@ void setup(void) {
 void loop(void) {
   server.handleClient();
 
-  //implement fingerprint
-
   switch (ESTADO) {
     case OPEN:
-      digitalWrite(VERDE, HIGH);
-      digitalWrite(ROJO, LOW);
+      
       openGate();
       isResident = false;
       ESTADO = CLOSE;
       break;
-    case CLOSE:
-      digitalWrite(VERDE, LOW);
-      digitalWrite(ROJO, HIGH);
+    case CLOSE:   
       closeGate();
       ESTADO = REST;
       break;
     case SEARCH:
-
+      
       if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial())
         return;
 
       String buffer;
       for (byte byte = 0 ; byte < rfid.uid.size ; byte++)
         buffer += String(rfid.uid.uidByte[byte] < 0x10 ? " 0" : " ") + String(rfid.uid.uidByte[byte], HEX);
+      
       Serial.println("Nuevo tag: " + buffer);
-      Serial.println();
 
       rfid.PICC_HaltA();
       rfid.PCD_StopCrypto1();
@@ -183,24 +177,32 @@ void loop(void) {
         // DO NOTHING
       }
       break;
-
-
   }
-
   delay(2);
 }
 
 void openGate() {
-  Serial.println("abriendo puerta");
-  delay(2000);
-  Serial.println("se termino de abrir puerta");
-
+  Serial.println("opening,.,.,");
+  digitalWrite(VERDE, HIGH);
+  digitalWrite(ROJO, LOW);
+  for (int pos = 0; pos <= 180; pos += 1) {
+    puerta.write(pos);
+    delay(35);
+  }
+  delay(500);
+  digitalWrite(VERDE, LOW);
 }
 
 void closeGate() {
-  Serial.println("cerrando puerta");
-  delay(2000);
-  Serial.println("se termino de cerrar puerta");
+  Serial.println("closing,.,.,");
+  digitalWrite(VERDE, LOW);
+  digitalWrite(ROJO, HIGH);
+    for (int pos = 180; pos >= 0; pos -= 1) {
+    puerta.write(pos);
+    delay(35);
+  }
+  delay(500);
+  digitalWrite(ROJO, LOW);
 
 }
 
